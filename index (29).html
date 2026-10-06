@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet de commandes – Menuiserie</title>
+<meta name="theme-color" content="#1F4E5F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Commandes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E7EBE9; --surface:#FFFFFF; --surface2:#F4F6F5; --ink:#1E2A30; --muted:#5B686D; --line:#CBD3D0;
+  --primary:#1F4E5F; --primary-ink:#FFFFFF; --rule:#F2C230; --rule-ink:#1E2A30;
+  --good:#2E7D4F; --good-bg:#E3F1E8; --warn:#9A6412; --warn-bg:#FBF0DB; --bad:#B3362B; --bad-bg:#F8E3E0;
+  --info-bg:#E2ECF0; --shadow:0 8px 30px rgba(20,35,40,.18);
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131A1D; --surface:#1B2428; --surface2:#222D32; --ink:#E4EBED; --muted:#93A2A7; --line:#2E3B40;
+    --primary:#6FB3C8; --primary-ink:#0E1A1F; --rule:#E3B623; --rule-ink:#1A1A12;
+    --good:#6CC08E; --good-bg:#1D3326; --warn:#E3B45C; --warn-bg:#3A2E17; --bad:#EE7F72; --bad-bg:#3D1F1C;
+    --info-bg:#1F3139; --shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131A1D; --surface:#1B2428; --surface2:#222D32; --ink:#E4EBED; --muted:#93A2A7; --line:#2E3B40;
+  --primary:#6FB3C8; --primary-ink:#0E1A1F; --rule:#E3B623; --rule-ink:#1A1A12;
+  --good:#6CC08E; --good-bg:#1D3326; --warn:#E3B45C; --warn-bg:#3A2E17; --bad:#EE7F72; --bad-bg:#3D1F1C;
+  --info-bg:#1F3139; --shadow:0 8px 30px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+@media (max-width:640px){.wrap{padding:0 12px}}
+
+/* En-tête */
+header.top{display:flex;align-items:center;gap:12px;padding:18px 0 14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:700 30px/1 var(--cond);margin:0;letter-spacing:.2px}
+.brand .mode{font-size:13px;color:var(--muted)}
+.userpick{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 10px;font-size:14px}
+.userpick select{border:0;background:transparent;font-weight:600;padding:4px 2px;max-width:150px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad);border-color:transparent;background:transparent}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.icon{width:18px;height:18px;flex:none}
+
+/* Mètre pliant : planning des semaines */
+.ruler-wrap{margin:4px 0 18px}
+.ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:14px;color:var(--muted)}
+.ruler-head strong{font:600 17px var(--cond);color:var(--ink)}
+.ruler{display:flex;overflow-x:auto;scrollbar-width:thin;padding:2px 0 6px;scroll-snap-type:x proximity}
+.seg{flex:1 0 96px;scroll-snap-align:start;background:var(--rule);color:var(--rule-ink);border:0;position:relative;text-align:left;padding:18px 10px 8px;min-height:88px;
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 1px,transparent 1px 9.6px);background-size:100% 9px;background-repeat:no-repeat;background-position:0 0}
+.seg::after{content:"";position:absolute;top:0;right:0;width:1px;height:100%;background:rgba(0,0,0,.35)}
+.seg:first-child{border-radius:6px 0 0 6px}.seg:last-child{border-radius:0 6px 6px 0}
+.seg:last-child::after{display:none}
+.seg .w{font:700 24px/1 var(--cond);display:block}
+.seg .n{font-size:12.5px;display:block;margin-top:4px;line-height:1.3;font-weight:500}
+.seg .n b{font-weight:700}
+.seg.now{background-color:var(--ink);color:var(--rule);background-image:repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px 9.6px)}
+.seg.sel{box-shadow:inset 0 -5px 0 var(--primary)}
+.seg.now.sel{box-shadow:inset 0 -5px 0 var(--rule)}
+.seg:hover{filter:brightness(.96)}
+
+/* Indicateurs */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.kpi{background:var(--surface);padding:12px 14px;min-width:0}
+.kpi .v{font:700 28px/1.1 var(--cond)}
+.kpi .l{font-size:13px;color:var(--muted);margin-top:2px}
+.kpi.click{cursor:pointer}.kpi.click:hover{background:var(--surface2)}
+.kpis.k5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:1000px){.kpis,.kpis.k5{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.kpis,.kpis.k5{grid-template-columns:repeat(2,1fr)}.kpi .v{font-size:24px}}
+
+/* Filtres */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0 12px}
+.search input{border:0;background:transparent;padding:10px 0;width:100%;outline:none;font-size:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .c{opacity:.7;margin-left:4px}
+select.sel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:14px}
+.activef{font-size:14px;color:var(--muted);margin:-4px 0 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.activef button{border:0;background:var(--info-bg);border-radius:6px;padding:3px 8px;font-size:13px}
+
+/* Liste */
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{font:600 13px var(--sans);color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface2);position:sticky;top:0}
+th.r,td.r{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface2)}
+.ref{font:600 14px var(--cond);letter-spacing:.3px;color:var(--muted)}
+.cli{font-weight:600}
+.sub{color:var(--muted);font-size:13px}
+.desc{max-width:260px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.b-done{background:var(--good-bg);color:var(--good)}
+.b-wait{background:var(--warn-bg);color:var(--warn)}
+.b-part{background:color-mix(in srgb,var(--rule) 35%,var(--surface));color:var(--ink)}
+.b-pose{background:var(--info-bg);color:var(--primary)}
+.b-sav{background:var(--bad-bg);color:var(--bad)}
+.coef{font:700 17px var(--cond);font-variant-numeric:tabular-nums}
+.c-good{color:var(--good)}.c-warn{color:var(--warn)}.c-bad{color:var(--bad)}.c-none{color:var(--muted);font-weight:500}
+.cards{display:none}
+@media (max-width:760px){
+  .tablebox{display:none}
+  .cards{display:grid;gap:8px}
+}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:left;width:100%}
+.card .row1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card .row2{margin:4px 0 8px}
+.card .row3{display:flex;gap:12px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);align-items:center}
+.card .row3 b{color:var(--ink);font-weight:600}
+.empty{padding:48px 20px;text-align:center;color:var(--muted)}
+.empty h2{font:600 24px var(--cond);color:var(--ink);margin:0 0 6px}
+.empty p{max-width:460px;margin:0 auto 16px}
+.count{font-size:14px;color:var(--muted);margin:0 0 8px}
+footer{padding:28px 0 40px;color:var(--muted);font-size:13px}
+
+/* Connexion */
+body:not(.in) .wrap,body:not(.in) .fab{display:none}
+body.in #login{display:none}
+#login{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}
+.lcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:26px 22px;width:min(400px,100%);box-shadow:var(--shadow)}
+.lcard h1{font:700 30px/1.05 var(--cond);margin:0 0 4px}
+.lcard p{color:var(--muted);margin:0 0 18px;font-size:15px}
+.lcard .f{margin-bottom:12px}
+.lcard .btn{width:100%;justify-content:center;padding:12px}
+.lcard .err{color:var(--bad);font-size:14px;min-height:20px;margin:4px 0 8px}
+.lcard .link{background:none;border:0;color:var(--primary);font-weight:600;padding:8px 0;margin-top:6px;font-size:14px}
+.lstripe{height:10px;border-radius:4px;margin:8px 0 18px;background:var(--rule);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 1px,transparent 1px 9.6px);background-size:100% 6px;background-repeat:no-repeat}
+
+/* Vues */
+.views{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;margin:0 0 16px}
+.views button{border:0;background:transparent;padding:8px 16px;border-radius:7px;font-weight:600;color:var(--muted);font-size:15px}
+.views button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink)}
+
+/* Statistiques */
+.stbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.stbar .sp{flex:1}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 12px;margin-bottom:18px}
+.panel h2{font:600 21px var(--cond);margin:0 0 2px}
+.panel .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:230px;border-bottom:2px solid var(--ink);position:relative}
+.mcol{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;border:0;background:transparent;padding:0;position:relative;min-width:0}
+.mcol:hover .bar{filter:brightness(1.1)}
+.mcol .val{font:700 15px var(--cond);margin-bottom:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mcol .bars{width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;height:calc(100% - 22px)}
+.bar{width:44%;max-width:30px;background:var(--primary);border-radius:3px 3px 0 0;min-height:0}
+.bar.prev{background:var(--line)}
+.mcol.cur .bar:not(.prev){background:var(--rule)}
+.mcol.future .val{color:var(--muted);font-weight:500}
+.mlbls{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:6px}
+.mlbls span{text-align:center;font-size:12.5px;color:var(--muted);overflow:hidden}
+.mlbls span.cur{color:var(--ink);font-weight:600}
+@media (max-width:520px){.chart{height:190px;gap:3px}.mlbls{gap:3px}.mcol .val{font-size:12px}.mlbls span{font-size:11px}.bar{width:46%}}
+.stable td,.stable th{padding:8px 12px}
+.stable tbody tr{cursor:pointer}
+.stable tr.future td{color:var(--muted)}
+.stable tfoot td{font-weight:700;border-top:2px solid var(--line);background:var(--surface2)}
+.evo{font-size:13px;font-weight:600}
+.note{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+
+/* Panneau d'édition */
+.overlay{position:fixed;inset:0;background:rgba(10,20,25,.45);display:none;z-index:20}
+.overlay.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--bg);z-index:21;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;box-shadow:var(--shadow);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.dhead{padding:14px 18px 0;background:var(--surface);border-bottom:1px solid var(--line)}
+.dhead .t{display:flex;align-items:center;gap:10px}
+.dhead h2{font:700 24px/1.1 var(--cond);margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tab{border:0;background:transparent;padding:10px 12px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--rule)}
+.dbody{flex:1;overflow-y:auto;padding:18px}
+.dfoot{display:flex;gap:8px;padding:12px 18px;background:var(--surface);border-top:1px solid var(--line)}
+.dfoot .sp{flex:1}
+.pane{display:none}.pane.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px 12px}
+.f{display:flex;flex-direction:column;gap:4px;grid-column:span 3;min-width:0}
+.f.s2{grid-column:span 2}.f.s6{grid-column:span 6}.f.s4{grid-column:span 4}
+@media (max-width:520px){.f,.f.s2,.f.s4{grid-column:span 6}.f.half{grid-column:span 3}}
+.f label{font-size:13px;font-weight:600;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:9px 10px;font-size:16px;width:100%;min-width:0}
+.f textarea{min-height:76px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+.f .hint{font-size:12.5px;color:var(--muted)}
+.checks{display:flex;flex-wrap:wrap;gap:8px;grid-column:span 6}
+.check{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:9px 12px;font-weight:500;cursor:pointer;font-size:15px}
+.check input{width:18px;height:18px;accent-color:var(--primary)}
+.sect{font:600 19px var(--cond);margin:22px 0 10px;grid-column:span 6}
+.sect:first-child{margin-top:0}
+.prodgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.prod{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+.prod.has{border-color:var(--primary)}
+.prod.ok{background:var(--good-bg);border-color:var(--good)}
+.prod.ok .pcode{color:var(--good)}
+.prod .pbot{display:flex;align-items:center;gap:6px}
+.prod .pbot input:not([type]){flex:1;min-width:0}
+.prod .pcode{display:block;font:700 16px var(--cond)}
+.prod .arr{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;flex:none}
+.prod.ok .arr{color:var(--good)}
+.prod .arr input{width:20px;height:20px;accent-color:var(--good);margin:0;border:0}
+.prod small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod input{border:0;border-bottom:1px dashed var(--line);background:transparent;width:100%;padding:3px 0;font-size:16px;outline:none}
+.achat{display:grid;grid-template-columns:minmax(0,190px) 1fr 130px;gap:8px;margin-bottom:8px}
+@media (max-width:520px){.achat{grid-template-columns:1fr 120px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px dashed var(--line)}.achat select{grid-column:1/-1}}
+.achat select{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:9px 8px;font-size:16px;min-width:0}
+.achat input{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:9px 10px;font-size:16px;min-width:0}
+.eurin{position:relative}.eurin input{padding-right:26px;text-align:right;width:100%}
+.eurin::after{content:"€";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:20px;overflow:hidden}
+.result .big{display:flex;align-items:center;gap:16px;padding:16px;border-bottom:1px solid var(--line)}
+.result .big .coef{font-size:52px;line-height:1}
+.result .big .lbl{font-size:14px;color:var(--muted)}
+.result .big .lbl strong{display:block;color:var(--ink);font-size:16px}
+.result table{font-size:14.5px}
+.result td{padding:8px 16px;cursor:default}
+.result tr:hover td{background:none}
+.formula{font-size:13px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line);background:var(--surface2)}
+.meta{font-size:12.5px;color:var(--muted);margin-top:18px}
+
+/* Paramètres */
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 24px));max-height:calc(100% - 40px);overflow:auto;background:var(--bg);border-radius:12px;z-index:31;display:none;box-shadow:var(--shadow)}
+.modal.open{display:block}
+.modal .mh{display:flex;align-items:center;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0}
+.modal .mh h2{font:700 24px var(--cond);margin:0;flex:1}
+.modal .mb{padding:18px}
+.modal.wide{width:min(940px,calc(100% - 24px))}
+.ov3{position:fixed;inset:0;background:rgba(10,20,25,.45);z-index:30;display:none}.ov3.open{display:block}
+.hsum{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:14.5px;margin-bottom:14px}
+.hsum b{font-weight:700}
+.hsec{margin:0 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.hsec>summary,.hsec>.hh{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:baseline;gap:10px;font:600 18px var(--cond)}
+.hsec>summary::-webkit-details-marker{display:none}
+.hsec>summary::before{content:"▸";color:var(--muted);font-size:14px}
+.hsec[open]>summary::before{content:"▾"}
+.hsec .hh{cursor:default}
+.hsec .cnt{font:500 14px var(--sans);color:var(--muted)}
+.hrow{display:grid;grid-template-columns:minmax(0,1.2fr) 90px minmax(0,1.6fr);gap:10px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);font-size:14.5px}
+.hrow .nm{font-weight:600;overflow-wrap:anywhere}
+.hrow .nm small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.hrow select{width:100%;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:7px 8px;font-size:14.5px}
+.hrow .cur{display:flex;gap:8px;align-items:center;justify-content:space-between;min-width:0}
+.hrow .cur span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .cur button{border:0;background:none;color:var(--primary);font-weight:600;font-size:13.5px;padding:4px;flex:none}
+.hrow.warn{background:var(--warn-bg)}
+@media (max-width:640px){.hrow{grid-template-columns:1fr 80px}.hrow>:last-child{grid-column:1/-1}}
+.hfoot{display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap;position:sticky;bottom:0;background:var(--bg);padding:12px 0 2px}
+.hfoot .sub{margin-right:auto}
+.hdet{margin-top:18px}
+.hdet h4{font:600 17px var(--cond);margin:14px 0 6px;display:flex;justify-content:space-between}
+.hsal{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:6px}
+.hsal summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 12px}
+.hsal summary::-webkit-details-marker{display:none}
+.hsal summary .nm{font-weight:600}
+.hsal summary .sub{grid-column:1}
+.hsal summary b{grid-row:1/3;grid-column:2;align-self:center;font:700 18px var(--cond);font-variant-numeric:tabular-nums}
+.hsal table{font-size:13.5px;border-top:1px solid var(--line)}
+.hsal td{padding:6px 12px;cursor:default}
+.hsal tr:hover td{background:none}
+.hnote{font-size:12.5px;color:var(--muted);margin-top:6px}
+.ov2{position:fixed;inset:0;background:rgba(10,20,25,.45);z-index:30;display:none}.ov2.open{display:block}
+.users{list-style:none;padding:0;margin:0 0 10px;display:flex;flex-direction:column;gap:6px}
+.users li{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 6px 6px 12px;font-weight:600}
+.users li span{flex:1}
+.addrow{display:flex;gap:8px}
+.addrow input{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:9px 10px;font-size:16px;min-width:0}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.block h3{font:600 18px var(--cond);margin:0 0 8px}
+.block p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.progress{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:10px;display:none}
+.progress div{height:100%;background:var(--primary);width:0}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14.5px;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 24px)}
+.toast.show{opacity:1}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.fab{display:none}
+@media (max-width:640px){.hide-sm{display:none}
+  .brand{flex-basis:100%}.brand .mode{display:none}
+  .ruler-head span{display:none}
+  .seg{flex-basis:108px}.seg .n{white-space:nowrap}
+  .filters select.sel{flex:1 1 40%}
+  .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .chip{flex:none}
+  .modehint{display:block}
+}
+@media (max-width:640px){
+  .newbtn-top{display:none}
+  .fab{display:flex;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:10;border-radius:999px;padding:14px 18px;box-shadow:var(--shadow)}
+  .brand h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div id="login"><div class="lcard" id="loginForm"></div></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Carnet de commandes</h1><span class="mode" id="modeLbl"></span></div>
+    <label class="userpick" title="Utilisateur actif sur cet appareil">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <select id="curUser" aria-label="Utilisateur actif"></select>
+    </label>
+    <button class="btn" id="btnSettings" aria-label="Paramètres">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      <span class="hide-sm">Paramètres</span>
+    </button>
+    <button class="btn primary newbtn-top" data-new>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nouvelle commande
+    </button>
+  </header>
+
+  <main id="app"><div class="loading">Chargement des commandes…</div></main>
+  <footer>Marge de fin de chantier = prix de vente ÷ prix de revient · Prix de revient = achats + heures réalisées × taux horaire.</footer>
+</div>
+
+<button class="btn primary fab" data-new aria-label="Nouvelle commande">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nouvelle
+</button>
+
+<div class="overlay" id="ov"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="dhead">
+    <div class="t"><h2 id="dTitle">Commande</h2>
+      <button class="btn ghost" id="dClose" aria-label="Fermer"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="cmd" aria-selected="true">Commande</button>
+      <button class="tab" role="tab" data-tab="four" aria-selected="false">Fournitures &amp; pose</button>
+      <button class="tab" role="tab" data-tab="fin" aria-selected="false">Suivi financier</button>
+    </div>
+  </div>
+  <form class="dbody" id="form" autocomplete="off" onsubmit="return false">
+    <div class="pane on" data-pane="cmd">
+      <div class="grid">
+        <div class="f s2 half"><label for="f_ref">N° de commande</label><input id="f_ref" data-f="ref" placeholder="PL2600000"></div>
+        <div class="f s2 half"><label for="f_date">Date</label><input id="f_date" type="date" data-f="date"></div>
+        <div class="f s2"><label for="f_com">Commercial</label><select id="f_com" data-f="commercial"></select></div>
+        <div class="f"><label for="f_cli">Client</label><input id="f_cli" data-f="client" required></div>
+        <div class="f"><label for="f_lieu">Lieu du chantier</label><input id="f_lieu" data-f="lieu" list="lieux"></div>
+        <div class="f s6"><label for="f_desc">Descriptif de la commande</label><input id="f_desc" data-f="descriptif" placeholder="ex. 2 PVC + 2 VR + 1 PE"></div>
+        <div class="f s6"><label for="f_com2">Commentaires</label><textarea id="f_com2" data-f="commentaires"></textarea></div>
+        <div class="sect">Statut</div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" data-f="arrivagePartiel"> Arrivage partiel</label>
+          <label class="check"><input type="checkbox" data-f="arrivage"> Arrivage complet</label>
+          <label class="check"><input type="checkbox" data-f="fini"> Chantier fini</label>
+          <label class="check"><input type="checkbox" data-f="sav"> SAV</label>
+          <label class="check"><input type="checkbox" data-f="solde"> Soldé</label>
+        </div>
+      </div>
+      <datalist id="lieux"></datalist>
+    </div>
+    <div class="pane" data-pane="four">
+      <div class="grid">
+        <div class="f s2 half"><label for="f_sl">Semaine de livraison</label><input id="f_sl" data-f="semLivraison" placeholder="S 44"></div>
+        <div class="f s2 half"><label for="f_sp">Semaine de pose</label><input id="f_sp" data-f="semPose" placeholder="S 45"></div>
+        <div class="f s2"><label for="f_tp">Temps de pose</label><input id="f_tp" data-f="tempsPose" placeholder="1J/2"><span class="hint">Durée / nb de poseurs</span></div>
+      </div>
+      <div class="sect" style="margin-top:22px">Fournitures</div>
+      <p class="hint" style="margin:-4px 0 10px;font-size:13.5px;color:var(--muted)">Indiquez la semaine prévue, puis cochez « Arrivé » à réception.</p>
+      <div class="prodgrid" id="prodgrid"></div>
+    </div>
+    <div class="pane" data-pane="fin">
+      <div class="grid">
+        <div class="f s6"><label for="f_pv">Prix de vente HT</label><div class="eurin"><input id="f_pv" data-f="prixVente" inputmode="decimal" data-num></div></div>
+      </div>
+      <div class="sect" style="margin-top:22px">Achats</div>
+      <div id="achats"></div>
+      <div class="sect" style="margin-top:14px">Heures</div>
+      <div class="grid">
+        <div class="f s2 half"><label for="f_hp">Heures prévues</label><input id="f_hp" data-f="heuresPrevues" inputmode="decimal" data-num></div>
+        <div class="f s2 half"><label for="f_hr">Heures réalisées</label><input id="f_hr" data-f="heuresRealisees" inputmode="decimal" data-num><span class="hint" id="hrHint"></span></div>
+        <div class="f s2"><label for="f_th">Taux horaire (prix de revient)</label><div class="eurin"><input id="f_th" data-f="tauxHoraire" inputmode="decimal" data-num></div><span class="hint" id="thHint"></span></div>
+      </div>
+      <div class="result" id="result"></div>
+      <div class="hdet" id="hdetail"></div>
+    </div>
+    <div class="meta" id="meta"></div>
+  </form>
+  <div class="dfoot">
+    <button class="btn danger" id="dDel">Supprimer</button>
+    <span class="sp"></span>
+    <button class="btn" id="dCancel">Annuler</button>
+    <button class="btn primary" id="dSave">Enregistrer</button>
+  </div>
+</aside>
+
+<div class="ov2" id="ov2"></div>
+<section class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="mh"><h2 id="sTitle">Paramètres</h2><button class="btn ghost" id="sClose" aria-label="Fermer"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="mb">
+    <div class="block">
+      <h3>Calcul de marge</h3>
+      <div class="grid">
+        <div class="f half"><label for="s_th">Taux horaire général</label><div class="eurin"><input id="s_th" inputmode="decimal"></div><span class="hint">Coût d'une heure de pose</span></div>
+        <div class="f half"><label for="s_cc">Coefficient visé</label><input id="s_cc" inputmode="decimal"><span class="hint">En dessous, la marge passe en orange</span></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" id="sSaveCalc">Enregistrer</button></div>
+    </div>
+    <div class="block">
+      <h3>Utilisateurs</h3>
+      <ul class="users" id="usersList"></ul>
+      <div class="addrow"><input id="newUser" placeholder="Nom du commercial"><button class="btn" id="addUser">Ajouter</button></div>
+    </div>
+    <div class="block">
+      <h3>Fournisseurs</h3>
+      <p>Liste proposée dans les achats du suivi financier.</p>
+      <ul class="users" id="fournList"></ul>
+      <div class="addrow"><input id="newFourn" placeholder="Nom du fournisseur"><button class="btn" id="addFourn">Ajouter</button></div>
+    </div>
+    <div class="block">
+      <h3>Heures chantier</h3>
+      <div id="hTxt"></div>
+      <button class="btn primary" id="btnHeures">Importer un fichier d'heures</button>
+      <input type="file" id="hFile" accept=".ods,.xlsx,.xls,application/vnd.oasis.opendocument.spreadsheet,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    </div>
+    <div class="block">
+      <h3>Données</h3>
+      <p id="impTxt"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="btnImport">Importer un fichier</button>
+        <button class="btn" id="btnExport">Exporter en CSV</button>
+      </div>
+      <div class="progress" id="prog"><div></div></div>
+      <input type="file" id="fileIn" accept=".json,.csv,application/json,text/csv" hidden>
+    </div>
+  </div>
+</section>
+<div class="ov3" id="ov3"></div>
+<section class="modal wide" id="hmodal" role="dialog" aria-modal="true" aria-labelledby="hTitle" style="z-index:31">
+  <div class="mh"><h2 id="hTitle">Importer les heures chantier</h2><button class="btn ghost" id="hClose" aria-label="Fermer"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="mb" id="hbody"></div>
+</section>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+/* =====================================================================
+   CONFIGURATION FIREBASE — projet carnet-commande
+   Copiez ici l'objet "firebaseConfig" affiché dans la console Firebase :
+   Paramètres du projet > Général > Vos applications > Application Web.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBIEwgZrHYCL4STJidSAN808F9vzMLul2Q",
+  authDomain: "carnet-commande.firebaseapp.com",
+  projectId: "carnet-commande",
+  storageBucket: "carnet-commande.firebasestorage.app",
+  messagingSenderId: "237272572253",
+  appId: "1:237272572253:web:68d9908289d044841a88b4"
+};
+/* ===================================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, setDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+(function(){
+"use strict";
+/* ---------- Constantes ---------- */
+const PRODUITS=[["VR","Volets roulants"],["VB","Volets battants"],["ME PVC","Menuiserie PVC"],["ME BOIS","Menuiserie bois"],["ME ALU","Menuiserie alu"],["PE","Porte d'entrée"],["ACEM","ACEM"],["Pergola","Pergola"],["Store","Store"],["PG","Porte de garage"],["Portail","Portail"],["Portillon","Portillon"],["Moteur","Moteur"],["AUTRES","Autres"]];
+const DEFAULT_CFG={tauxHoraire:45,coefCible:1.3,utilisateurs:["SAMUEL"],fournisseurs:[]};
+const NB_ACHATS=10;
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const num=v=>{if(v===""||v==null)return null;const n=parseFloat(String(v).replace(/[\s\u00a0€]/g,"").replace(",","."));return isFinite(n)?n:null};
+const eur=n=>n==null?"–":n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+const nfr=(n,d=1)=>n==null?"–":n.toLocaleString("fr-FR",{maximumFractionDigits:d});
+const coefFmt=n=>n==null||!isFinite(n)?"–":n.toFixed(2).replace(".",",");
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
+function weekNum(s){const m=String(s||"").match(/S\s*(\d{1,2})/i);return m?parseInt(m[1],10):null}
+const TODAY=new Date(), CUR_WEEK=isoWeek(TODAY);
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),2600)}
+
+/* ---------- Données ---------- */
+const S={loaded:false,mode:"loading",cmds:new Map(),raw:new Map(),H:new Map(),Hdocs:new Map(),hcfg:{map:{},imports:{}},hDenied:false,cfg:{...DEFAULT_CFG},canWrite:true};
+let curUser=lsGet("carnet.user",null);
+const F={q:"",statut:"encours",com:"tous",week:null,tri:"date-desc",view:"liste",month:null,year:null,metric:"n"};
+
+function blank(){return{ref:"",date:TODAY.toISOString().slice(0,10),client:"",lieu:"",descriptif:"",commercial:curUser||"",commentaires:"",arrivage:false,arrivagePartiel:false,fini:false,sav:false,solde:false,semLivraison:"",semPose:"",tempsPose:"",produits:{},arrives:{},prixVente:null,achats:Array.from({length:NB_ACHATS},()=>({fr:"",lib:"",mt:null})),heuresPrevues:null,heuresRealisees:null,tauxHoraire:null}}
+function norm(o){const b=blank();const c={...b,...o};c.produits=o.produits||{};c.arrives=o.arrives||{};const a=Array.isArray(o.achats)?o.achats:[];c.achats=Array.from({length:NB_ACHATS},(_,i)=>({fr:(a[i]&&a[i].fr)||"",lib:(a[i]&&a[i].lib)||"",mt:a[i]?num(a[i].mt):null}));return c}
+function fin(c){
+  const achats=c.achats.reduce((s,a)=>s+(a.mt||0),0);
+  const hasAch=c.achats.some(a=>a.mt!=null);
+  const taux=c.tauxHoraire!=null?c.tauxHoraire:S.cfg.tauxHoraire;
+  const pv=c.prixVente;
+  const prPrev=(hasAch||c.heuresPrevues!=null)?achats+(c.heuresPrevues||0)*taux:null;
+  const prReel=(hasAch||c.heuresRealisees!=null)?achats+(c.heuresRealisees||0)*taux:null;
+  const coefPrev=pv&&prPrev?pv/prPrev:null, coefReel=pv&&prReel&&c.heuresRealisees!=null?pv/prReel:null;
+  return{achats,hasAch,taux,pv,prPrev,prReel,coefPrev,coefReel,coef:coefReel!=null?coefReel:coefPrev,isReel:coefReel!=null};
+}
+function coefClass(k){if(k==null)return"c-none";if(k>=S.cfg.coefCible)return"c-good";if(k>=1)return"c-warn";return"c-bad"}
+function fournStat(c){const keys=new Set([...Object.keys(c.produits||{}),...Object.keys(c.arrives||{}).filter(k=>c.arrives[k])]);let n=0;keys.forEach(k=>{if((c.arrives||{})[k])n++});return{n,tot:keys.size}}
+function statut(c){if(c.fini)return["Terminée","b-done"];if(c.arrivage)return["À poser","b-pose"];if(c.arrivagePartiel){const s=fournStat(c);return["Arrivage partiel"+(s.tot?` ${s.n}/${s.tot}`:""),"b-part"]}return["Attente marchandise","b-wait"]}
+
+let FB=null;
+async function saveCmd(id,data){
+  data.updatedAt=new Date().toISOString();data.updatedBy=curUser||"";
+  const p=setDoc(doc(FB.db,"commandes",id),data);
+  if(!navigator.onLine){toast("Hors connexion : la commande sera envoyée au retour du réseau.");return}
+  await p;
+}
+async function delCmd(id){const p=deleteDoc(doc(FB.db,"commandes",id));if(navigator.onLine)await p}
+async function saveCfg(){const p=setDoc(doc(FB.db,"config","general"),{...S.cfg});if(navigator.onLine)await p}
+function newId(){return doc(collection(FB.db,"commandes")).id}
+let rq=0;function scheduleRender(){cancelAnimationFrame(rq);rq=requestAnimationFrame(render)}
+let unsubs=[];
+function showLogin(msg){document.body.classList.remove("in");if(msg)$("#loginMsg").textContent=msg}
+function denied(){
+  unsubs.forEach(u=>u());unsubs=[];
+  $("#app").innerHTML=`<div class="tablebox" style="display:block"><div class="empty"><h2>Accès à la base refusé</h2><p>Firebase refuse la lecture des commandes. Vérifiez que les règles du fichier firestore.rules sont bien publiées (Firestore Database &gt; Règles &gt; Publier), puis rechargez la page.</p></div></div>`;
+}
+function startData(){
+  unsubs.push(onSnapshot(collection(FB.db,"commandes"),snap=>{
+    const m=new Map();snap.docs.forEach(d=>m.set(d.id,norm(d.data()||{})));S.raw=m;derive();S.loaded=true;scheduleRender();
+  },e=>{if(e&&e.code==="permission-denied")denied();else toast("Connexion aux données perdue. Rechargez la page.")}));
+  unsubs.push(onSnapshot(doc(FB.db,"config","general"),s=>{
+    if(s.exists()){S.cfg={...DEFAULT_CFG,...s.data()};if(!Array.isArray(S.cfg.utilisateurs)||!S.cfg.utilisateurs.length)S.cfg.utilisateurs=[...DEFAULT_CFG.utilisateurs]}
+    scheduleRender();renderSettings();
+  },()=>{}));
+  unsubs.push(onSnapshot(collection(FB.db,"heures"),snap=>{
+    S.hDenied=false;const docs=new Map();snap.docs.forEach(d=>docs.set(d.id,d.data()||{}));S.Hdocs=docs;
+    const H=new Map();docs.forEach(x=>{if(!x.commandeId)return;const o=H.get(x.commandeId)||{total:0,years:{}};o.total+=x.total||0;o.years[x.year]={total:x.total||0,lignes:x.lignes||[],fichier:x.fichier||"",importedAt:x.importedAt||""};H.set(x.commandeId,o)});
+    S.H=H;derive();scheduleRender();
+  },e=>{if(e&&e.code==="permission-denied"){S.hDenied=true;renderSettings()}}));
+  unsubs.push(onSnapshot(doc(FB.db,"config","heures"),s=>{S.hcfg={map:{},imports:{},...(s.exists()?s.data():{})};renderSettings()},()=>{}));
+}
+function derive(){
+  const m=new Map();S.raw.forEach((c,id)=>{const x=S.H.get(id);m.set(id,x?{...c,heuresRealisees:Math.round(x.total*100)/100,hImport:true}:c)});S.cmds=m;
+}
+function boot(){
+  if(!firebaseConfig.apiKey||!firebaseConfig.projectId){
+    showLogin();$("#loginForm").innerHTML=`<h1>Configuration à terminer</h1><div class="lstripe"></div><p>Ouvrez le fichier <b>index.html</b> et collez la configuration de votre projet Firebase dans le bloc « CONFIGURATION FIREBASE », tout en haut du script. Le guide LISEZMOI.md détaille chaque étape.</p>`;return}
+  const app=initializeApp(firebaseConfig);
+  let db;try{db=initializeFirestore(app,{ignoreUndefinedProperties:true,localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}
+  catch(e){db=initializeFirestore(app,{ignoreUndefinedProperties:true})}
+  FB={app,db};S.mode="db";
+  document.body.classList.add("in");
+  startData();
+  const updNet=()=>{$("#modeLbl").textContent=navigator.onLine?"":"· hors connexion"};
+  addEventListener("online",updNet);addEventListener("offline",updNet);updNet();
+}
+
+/* ---------- Rendu principal ---------- */
+function users(){return S.cfg.utilisateurs||[]}
+function fourns(){return(S.cfg.fournisseurs||[]).slice().sort((a,b)=>a.localeCompare(b,"fr"))}
+function renderUserPick(){
+  const u=users();if(!curUser||!u.includes(curUser)){curUser=u[0]||null}
+  $("#curUser").innerHTML=u.map(n=>`<option ${n===curUser?"selected":""}>${esc(n)}</option>`).join("");
+}
+function baseSet(){const all=[...S.cmds.entries()].map(([id,c])=>({id,...c}));return F.com==="tous"?all:all.filter(c=>c.commercial===F.com)}
+function matches(c,q){if(!q)return true;const hay=[c.ref,c.client,c.lieu,c.descriptif,c.commentaires,c.commercial,c.semLivraison,c.semPose,...Object.values(c.produits||{}),...c.achats.map(a=>a.lib+" "+a.fr)].join(" ").toLowerCase();return q.toLowerCase().split(/\s+/).every(w=>hay.includes(w))}
+const STATUTS=[["encours","En cours",c=>!c.fini],["poser","À poser",c=>!c.fini&&c.arrivage],["partiel","Arrivage partiel",c=>!c.fini&&!c.arrivage&&c.arrivagePartiel],["attente","Attente marchandise",c=>!c.fini&&!c.arrivage&&!c.arrivagePartiel],["sav","SAV",c=>c.sav],["fini","Terminées",c=>c.fini],["toutes","Toutes",c=>true]];
+function filtered(){
+  const st=STATUTS.find(s=>s[0]===F.statut)[2];
+  let l=baseSet().filter(c=>st(c)&&matches(c,F.q));
+  if(F.month)l=l.filter(c=>(c.date||"").startsWith(F.month));
+  if(F.week!=null)l=l.filter(c=>weekNum(c.semLivraison)===F.week||weekNum(c.semPose)===F.week||Object.values(c.produits||{}).some(v=>weekNum(v)===F.week));
+  const [k,dir]=F.tri.split("-");const sg=dir==="desc"?-1:1;
+  l.sort((a,b)=>{let x,y;
+    if(k==="date"){x=a.date||"";y=b.date||""}
+    else if(k==="client"){x=(a.client||"").toLowerCase();y=(b.client||"").toLowerCase()}
+    else if(k==="marge"){x=fin(a).coef;y=fin(b).coef;x=x==null?(sg>0?1e9:-1e9):x;y=y==null?(sg>0?1e9:-1e9):y}
+    else if(k==="livr"){x=weekNum(a.semLivraison);y=weekNum(b.semLivraison);x=x==null?999:x;y=y==null?999:y}
+    return x<y?-sg:x>y?sg:0});
+  return l;
+}
+
+function render(){
+  renderUserPick();
+  if(!S.loaded)return;
+  const app=$("#app");
+  if(S.cmds.size===0){
+    app.innerHTML=`<div class="tablebox" style="display:block"><div class="empty"><h2>Aucune commande pour l'instant</h2><p>Importez le fichier <b>commandes_import.json</b> (vos commandes existantes) ou un export CSV, ou créez votre première commande.</p><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-act="import">Importer un fichier</button><button class="btn" data-new>Nouvelle commande</button></div></div></div>`;
+    return;
+  }
+  if(F.view==="stats"){app.innerHTML=viewSwitch()+statsHtml();bindCom();return}
+  const base=baseSet(), open=base.filter(c=>!c.fini);
+  const yr=String(TODAY.getFullYear());
+  const yearSet=base.filter(c=>(c.date||"").startsWith(yr));
+  const caYear=yearSet.reduce((s,c)=>s+(c.prixVente||0),0);
+  let pvF=0,prF=0,nF=0;base.forEach(c=>{const f=fin(c);if(f.isReel){pvF+=f.pv;prF+=f.prReel;nF++}});
+  const hRest=open.reduce((s,c)=>s+(c.heuresPrevues||0),0);
+  const margeMoy=prF?pvF/prF:null;
+
+  // Mètre pliant : semaines
+  const weeks=[];for(let i=-1;i<9;i++){let w=CUR_WEEK+i;if(w<1)w+=52;if(w>52)w-=52;weeks.push(w)}
+  const segs=weeks.map(w=>{const liv=open.filter(c=>weekNum(c.semLivraison)===w).length;const pose=open.filter(c=>weekNum(c.semPose)===w).length;
+    return`<button class="seg ${w===CUR_WEEK?"now":""} ${F.week===w?"sel":""}" data-week="${w}" aria-pressed="${F.week===w}"><span class="w">S ${w}</span><span class="n"><b>${liv}</b> livr. · <b>${pose}</b> pose${pose>1?"s":""}</span></button>`}).join("");
+
+  const counts=Object.fromEntries(STATUTS.map(s=>[s[0],base.filter(c=>s[2](c)&&matches(c,F.q)).length]));
+  const list=filtered();
+  const coms=[...new Set([...users(),...[...S.cmds.values()].map(c=>c.commercial).filter(Boolean)])];
+
+  app.innerHTML=viewSwitch()+`
+  <section class="ruler-wrap" aria-label="Planning des semaines">
+    <div class="ruler-head"><strong>Semaine ${CUR_WEEK}</strong><span>Livraisons et poses des commandes en cours</span></div>
+    <div class="ruler">${segs}</div>
+  </section>
+  <section class="kpis">
+    <div class="kpi click" data-kpi="encours"><div class="v">${open.length}</div><div class="l">Commandes en cours</div></div>
+    <div class="kpi click" data-kpi="poser"><div class="v">${open.filter(c=>c.arrivage).length}</div><div class="l">Marchandise arrivée, à poser</div></div>
+    <div class="kpi click" data-kpi="attente"><div class="v">${open.filter(c=>!c.arrivage&&!c.arrivagePartiel).length}</div><div class="l">En attente de marchandise${(()=>{const n=open.filter(c=>!c.arrivage&&c.arrivagePartiel).length;return n?` · <span class="click-part" data-kpi="partiel" style="text-decoration:underline;cursor:pointer">${n} en arrivage partiel</span>`:""})()}</div></div>
+    <div class="kpi"><div class="v">${nfr(hRest,0)} h</div><div class="l">Heures de pose à venir</div></div>
+    <div class="kpi"><div class="v">${eur(caYear)}</div><div class="l">Ventes ${yr} renseignées</div></div>
+    <div class="kpi"><div class="v ${coefClass(margeMoy)}">${coefFmt(margeMoy)}</div><div class="l">Marge moyenne fin de chantier${nF?` (${nF} chantier${nF>1?"s":""})`:""}</div></div>
+  </section>
+  <section class="filters">
+    <label class="search"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Client, lieu, n° de commande, produit…" value="${esc(F.q)}" aria-label="Rechercher"></label>
+    <select class="sel" id="fCom" aria-label="Commercial"><option value="tous">Tous les commerciaux</option>${coms.map(n=>`<option ${F.com===n?"selected":""} value="${esc(n)}">${esc(n)}</option>`).join("")}</select>
+    <select class="sel" id="fTri" aria-label="Trier">${[["date-desc","Plus récentes"],["date-asc","Plus anciennes"],["livr-asc","Semaine de livraison"],["client-asc","Client A→Z"],["marge-asc","Marge la plus faible"],["marge-desc","Marge la plus forte"]].map(o=>`<option value="${o[0]}" ${F.tri===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select>
+  </section>
+  <div class="chips" style="margin-bottom:12px">${STATUTS.map(s=>`<button class="chip" data-st="${s[0]}" aria-pressed="${F.statut===s[0]}">${s[1]}<span class="c">${counts[s[0]]}</span></button>`).join("")}</div>
+  ${F.month?`<div class="activef">Commandes enregistrées en ${moisLong(F.month)} <button data-act="clearmonth">Retirer</button></div>`:""}
+  ${F.week!=null?`<div class="activef">Filtré sur la semaine ${F.week} <button data-act="clearweek">Retirer</button></div>`:""}
+  <p class="count">${list.length} commande${list.length>1?"s":""}</p>
+  ${list.length?`
+  <div class="tablebox"><table>
+    <thead><tr><th>Commande</th><th>Client · lieu</th><th>Descriptif</th><th>Livr.</th><th>Pose</th><th class="r">Heures</th><th class="r">Vente HT</th><th class="r">Marge</th><th>Statut</th></tr></thead>
+    <tbody>${list.map(rowHtml).join("")}</tbody></table></div>
+  <div class="cards">${list.map(cardHtml).join("")}</div>`
+  :`<div class="tablebox" style="display:block"><div class="empty"><h2>Aucune commande ne correspond</h2><p>Modifiez la recherche ou choisissez un autre statut.</p><button class="btn" data-act="reset">Afficher toutes les commandes</button></div></div>`}
+  `;
+  const q=$("#q");q.addEventListener("input",e=>{F.q=e.target.value;clearTimeout(render._q);render._q=setTimeout(()=>{const pos=q.selectionStart;render();const nq=$("#q");nq.focus();try{nq.setSelectionRange(pos,pos)}catch(_){}},180)});
+  bindCom();
+  $("#fTri").onchange=e=>{F.tri=e.target.value;render()};
+  renderLieux();
+}
+const MOIS=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const MOISL=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function moisLong(ym){return MOISL[+ym.slice(5,7)-1]+" "+ym.slice(0,4)}
+function viewSwitch(){return`<div class="views" role="group" aria-label="Affichage"><button data-view="liste" aria-pressed="${F.view==="liste"}">Commandes</button><button data-view="stats" aria-pressed="${F.view==="stats"}">Statistiques</button></div>`}
+function comSelect(){const coms=[...new Set([...users(),...[...S.cmds.values()].map(c=>c.commercial).filter(Boolean)])];
+  return`<select class="sel" id="fCom" aria-label="Commercial"><option value="tous">Tous les commerciaux</option>${coms.map(n=>`<option ${F.com===n?"selected":""} value="${esc(n)}">${esc(n)}</option>`).join("")}</select>`}
+function bindCom(){const s=$("#fCom");if(s)s.onchange=e=>{F.com=e.target.value;render()};const y=$("#fYear");if(y)y.onchange=e=>{F.year=e.target.value;render()}}
+function aggMonths(list,yr){const m=Array.from({length:12},()=>({n:0,ca:0,pv:0,pr:0,nm:0}));
+  list.forEach(c=>{const d=c.date||"";if(!d.startsWith(yr))return;const i=+d.slice(5,7)-1;if(!(i>=0&&i<12))return;const o=m[i];o.n++;o.ca+=c.prixVente||0;const f=fin(c);if(f.isReel){o.pv+=f.pv;o.pr+=f.prReel;o.nm++}});return m}
+function sumM(m,upto){return m.slice(0,upto).reduce((a,o)=>({n:a.n+o.n,ca:a.ca+o.ca,pv:a.pv+o.pv,pr:a.pr+o.pr,nm:a.nm+o.nm}),{n:0,ca:0,pv:0,pr:0,nm:0})}
+function evo(a,b){if(!b)return"";const p=Math.round((a-b)/b*100);return`<span class="evo ${p>=0?"c-good":"c-bad"}">${p>0?"+":""}${p} %</span>`}
+function statsHtml(){
+  const base=baseSet();
+  const years=[...new Set([...S.cmds.values()].map(c=>(c.date||"").slice(0,4)).filter(y=>/^\d{4}$/.test(y)))].sort();
+  const cy=String(TODAY.getFullYear());if(!years.includes(cy))years.push(cy);
+  if(!F.year||!years.includes(F.year))F.year=cy;
+  const Y=F.year, PY=String(+Y-1), isCur=Y===cy, curM=TODAY.getMonth();
+  const cur=aggMonths(base,Y), prev=aggMonths(base,PY);
+  const upto=isCur?curM+1:12;
+  const tc=sumM(cur,12), tpSame=sumM(prev,upto), tp=sumM(prev,12);
+  const K=F.metric;const val=o=>K==="ca"?o.ca:o.n;const fmtV=v=>K==="ca"?(v?eur(v).replace(/\s?€/,"")+"\u00a0€":"–"):(v||"–");
+  const fmtShort=v=>{if(K!=="ca")return v||"";if(!v)return"";return v>=1000?nfr(v/1000,v>=10000?0:1)+"k":nfr(v,0)};
+  const max=Math.max(1,...cur.map(val),...prev.map(val));
+  let best=-1,bi=-1;cur.forEach((o,i)=>{if(val(o)>best){best=val(o);bi=i}});
+  const mMonths=isCur?curM+1:12;const avg=val(tc)/mMonths;
+  const marge=tc.pr?tc.pv/tc.pr:null;
+  const hasPrev=prev.some(o=>o.n);
+  const cols=cur.map((o,i)=>{const fut=isCur&&i>curM, now=isCur&&i===curM;const v=val(o),pv=val(prev[i]);
+    return`<button class="mcol ${now?"cur":""} ${fut?"future":""}" data-month="${Y}-${String(i+1).padStart(2,"0")}" title="${MOISL[i]} ${Y} : ${o.n} commande${o.n>1?"s":""}${o.ca?", "+eur(o.ca):""}${hasPrev?` (${PY} : ${prev[i].n})`:""}" ${fut&&!o.n?"disabled":""}>
+      <span class="val">${fut&&!v?"":fmtShort(v)||(K==="ca"?"":"0")}</span>
+      <span class="bars">${hasPrev?`<span class="bar prev" style="height:${pv/max*100}%"></span>`:""}<span class="bar" style="height:${v/max*100}%"></span></span></button>`}).join("");
+  const rows=cur.map((o,i)=>{const fut=isCur&&i>curM;if(fut&&!o.n)return"";const pm=o.pr?o.pv/o.pr:null;
+    return`<tr data-month="${Y}-${String(i+1).padStart(2,"0")}" class="${fut?"future":""}"><td>${MOISL[i]}</td><td class="r num"><b>${o.n}</b></td><td class="r num">${hasPrev?prev[i].n+" "+evo(o.n,prev[i].n):"–"}</td><td class="r num">${eur(o.ca||null)}</td><td class="r num">${o.ca&&o.n?eur(o.ca/o.n):"–"}</td><td class="r"><span class="coef ${coefClass(pm)}">${coefFmt(pm)}</span></td></tr>`}).reverse().join("");
+  // par commercial
+  let byCom="";
+  if(F.com==="tous"){const g={};[...S.cmds.values()].filter(c=>(c.date||"").startsWith(Y)).forEach(c=>{const k=c.commercial||"Non attribué";g[k]=g[k]||{n:0,ca:0,pv:0,pr:0};g[k].n++;g[k].ca+=c.prixVente||0;const f=fin(c);if(f.isReel){g[k].pv+=f.pv;g[k].pr+=f.prReel}});
+    const ks=Object.keys(g).sort((a,b)=>g[b].n-g[a].n);
+    if(ks.length>1)byCom=`<section class="panel"><div class="ph"><h2>Par commercial en ${Y}</h2></div><div style="overflow-x:auto"><table class="stable"><thead><tr><th>Commercial</th><th class="r">Commandes</th><th class="r">Montant HT</th><th class="r">Panier moyen</th><th class="r">Marge</th></tr></thead><tbody>${ks.map(k=>{const o=g[k],m=o.pr?o.pv/o.pr:null;return`<tr data-com="${esc(k)}"><td class="cli">${esc(k)}</td><td class="r num"><b>${o.n}</b></td><td class="r num">${eur(o.ca||null)}</td><td class="r num">${o.ca?eur(o.ca/o.n):"–"}</td><td class="r"><span class="coef ${coefClass(m)}">${coefFmt(m)}</span></td></tr>`}).join("")}</tbody></table></div></section>`}
+  return`
+  <div class="stbar">${comSelect()}<select class="sel" id="fYear" aria-label="Année">${years.slice().reverse().map(y=>`<option ${y===Y?"selected":""}>${y}</option>`).join("")}</select><span class="sp"></span>
+    <div class="chips"><button class="chip" data-metric="n" aria-pressed="${K==="n"}">Nombre de commandes</button><button class="chip" data-metric="ca" aria-pressed="${K==="ca"}">Montant HT</button></div></div>
+  <section class="kpis k5">
+    <div class="kpi"><div class="v">${tc.n}</div><div class="l">Commandes enregistrées en ${Y}</div></div>
+    <div class="kpi"><div class="v">${hasPrev&&tpSame.n?(()=>{const p=Math.round((tc.n-tpSame.n)/tpSame.n*100);return`<span class="${p>=0?"c-good":"c-bad"}">${p>0?"+":""}${p} %</span>`})():"–"}</div><div class="l">${hasPrev?`vs ${PY}${isCur?` à la même date (${tpSame.n})`:` (${tp.n})`}`:"Pas de données l'année précédente"}</div></div>
+    <div class="kpi"><div class="v">${eur(tc.ca||null)}</div><div class="l">Montant HT vendu en ${Y}</div></div>
+    <div class="kpi"><div class="v">${bi>=0&&best>0?MOISL[bi]:"–"}</div><div class="l">Meilleur mois${best>0?` (${K==="ca"?eur(best):best+" cdes"})`:""} · moyenne ${K==="ca"?eur(avg):nfr(avg,1)+" / mois"}</div></div>
+    <div class="kpi"><div class="v ${coefClass(marge)}">${coefFmt(marge)}</div><div class="l">Marge moyenne fin de chantier${tc.nm?` (${tc.nm} chantier${tc.nm>1?"s":""})`:""}</div></div>
+  </section>
+  <section class="panel">
+    <div class="ph"><h2>${K==="ca"?"Montant HT":"Commandes enregistrées"} par mois${F.com!=="tous"?" · "+esc(F.com):""}</h2>
+      <div class="legend"><span><i style="background:var(--primary)"></i>${Y}</span>${hasPrev?`<span><i style="background:var(--line)"></i>${PY}</span>`:""}${isCur?`<span><i style="background:var(--rule)"></i>mois en cours</span>`:""}</div></div>
+    <div class="chart">${cols}</div>
+    <div class="mlbls">${MOIS.map((m,i)=>`<span class="${isCur&&i===curM?"cur":""}">${m}</span>`).join("")}</div>
+    ${K==="ca"&&!tc.ca?`<p class="note">Aucun prix de vente renseigné pour ${Y}. Saisissez-le dans l'onglet « Suivi financier » des commandes pour suivre le montant vendu.</p>`:`<p class="note">Cliquez sur un mois pour voir ses commandes.</p>`}
+  </section>
+  <section class="panel"><div class="ph"><h2>Détail mois par mois</h2></div>
+    <div style="overflow-x:auto"><table class="stable"><thead><tr><th>Mois</th><th class="r">Commandes</th><th class="r">${PY}</th><th class="r">Montant HT</th><th class="r">Panier moyen</th><th class="r">Marge</th></tr></thead>
+    <tbody>${rows||`<tr><td colspan="6" class="sub">Aucune commande en ${Y}.</td></tr>`}</tbody>
+    <tfoot><tr><td>Total ${Y}</td><td class="r num">${tc.n}</td><td class="r num">${hasPrev?tp.n:"–"}</td><td class="r num">${eur(tc.ca||null)}</td><td class="r num">${tc.ca&&tc.n?eur(tc.ca/tc.n):"–"}</td><td class="r"><span class="coef ${coefClass(marge)}">${coefFmt(marge)}</span></td></tr></tfoot></table></div>
+  </section>
+  ${byCom}`;
+}
+function fmtDate(d){if(!d)return"";const [y,m,j]=d.split("-");return`${j}/${m}/${y.slice(2)}`}
+function hoursCell(c){if(c.heuresPrevues==null&&c.heuresRealisees==null)return"–";return`${nfr(c.heuresPrevues)}${c.heuresRealisees!=null?` / <b class="${c.heuresRealisees>(c.heuresPrevues||0)?"c-bad":""}">${nfr(c.heuresRealisees)}</b>`:""}`}
+function margeCell(c){const f=fin(c);if(f.coef==null)return`<span class="coef c-none">–</span>`;return`<span class="coef ${coefClass(f.coef)}" title="${f.isReel?"Marge fin de chantier (heures réalisées)":"Marge prévisionnelle (heures prévues)"}">${coefFmt(f.coef)}</span>${f.isReel?"":`<div class="sub">prévue</div>`}`}
+function rowHtml(c){const [st,cl]=statut(c);return`<tr data-id="${esc(c.id)}">
+  <td><div class="ref">${esc(c.ref)||"—"}</div><div class="sub">${fmtDate(c.date)}${c.commercial&&F.com==="tous"&&users().length>1?` · ${esc(c.commercial)}`:""}</div></td>
+  <td><div class="cli">${esc(c.client)}</div><div class="sub">${esc(c.lieu)}</div></td>
+  <td class="desc">${esc(c.descriptif)}${c.commentaires?`<div class="sub">${esc(c.commentaires)}</div>`:""}</td>
+  <td class="num">${esc(c.semLivraison)||"–"}</td><td class="num">${esc(c.semPose)||"–"}</td>
+  <td class="r num">${hoursCell(c)}</td><td class="r num">${eur(c.prixVente)}</td><td class="r">${margeCell(c)}</td>
+  <td><span class="badge ${cl}">${st}</span>${c.sav?` <span class="badge b-sav">SAV</span>`:""}</td></tr>`}
+function cardHtml(c){const [st,cl]=statut(c);const f=fin(c);return`<button class="card" data-id="${esc(c.id)}">
+  <div class="row1"><span class="cli">${esc(c.client)}</span><span><span class="badge ${cl}">${st}</span>${c.sav?` <span class="badge b-sav">SAV</span>`:""}</span></div>
+  <div class="row2"><span class="sub">${esc(c.ref)} · ${fmtDate(c.date)}${c.lieu?" · "+esc(c.lieu):""}</span><div>${esc(c.descriptif)}</div></div>
+  <div class="row3"><span>Livr. <b>${esc(c.semLivraison)||"–"}</b></span><span>Pose <b>${esc(c.semPose)||"–"}</b></span><span><b>${nfr(c.heuresPrevues)}</b> h</span>${c.prixVente!=null?`<span><b>${eur(c.prixVente)}</b></span>`:""}${f.coef!=null?`<span class="coef ${coefClass(f.coef)}">${coefFmt(f.coef)}</span>`:""}</div></button>`}
+function renderLieux(){const s=new Set([...S.cmds.values()].map(c=>c.lieu).filter(Boolean));$("#lieux").innerHTML=[...s].sort().map(l=>`<option value="${esc(l)}">`).join("")}
+
+/* ---------- Événements globaux ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-new],[data-id],[data-st],[data-week],[data-kpi],[data-act],[data-view],[data-month],[data-metric],[data-com]");if(!t)return;
+  if(t.dataset.view){F.view=t.dataset.view;render();window.scrollTo(0,0);return}
+  if(t.dataset.month&&!t.disabled){F.view="liste";F.month=t.dataset.month;F.week=null;F.statut="toutes";F.q="";render();window.scrollTo(0,0);return}
+  if(t.dataset.metric){F.metric=t.dataset.metric;render();return}
+  if(t.dataset.com){F.com=t.dataset.com;render();return}
+  if(t.hasAttribute("data-new")){openDrawer(null);return}
+  if(t.dataset.id&&!t.closest(".drawer")){openDrawer(t.dataset.id);return}
+  if(t.dataset.st){F.statut=t.dataset.st;render();return}
+  if(t.dataset.week){const w=+t.dataset.week;F.week=F.week===w?null:w;if(F.week!=null&&F.statut!=="toutes"&&F.statut!=="encours")F.statut="encours";render();return}
+  if(t.dataset.kpi){F.statut=t.dataset.kpi;render();return}
+  const a=t.dataset.act;
+  if(a==="clearweek"){F.week=null;render()}
+  if(a==="clearmonth"){F.month=null;render()}
+  if(a==="reset"){F.q="";F.statut="toutes";F.week=null;F.month=null;render()}
+  if(a==="import")$("#fileIn").click();
+});
+$("#curUser").onchange=e=>{curUser=e.target.value;lsSet("carnet.user",curUser);toast("Utilisateur actif : "+curUser)};
+
+/* ---------- Panneau commande ---------- */
+let editId=null;
+$("#prodgrid").innerHTML=PRODUITS.map(([k,l])=>{const id=k.replace(/\s/g,"_");return`<div class="prod" data-p="${esc(k)}"><label class="pcode" for="p_${id}">${esc(k)}</label><small>${esc(l)}</small><div class="pbot"><input id="p_${id}" data-prod="${esc(k)}" placeholder="S __" aria-label="Semaine ${esc(l)}"><label class="arr"><input type="checkbox" data-arr="${esc(k)}" aria-label="${esc(l)} arrivé">Arrivé</label></div></div>`}).join("");
+function paintProd(tile){const w=tile.querySelector("[data-prod]").value.trim(),a=tile.querySelector("[data-arr]").checked;tile.classList.toggle("has",!!w&&!a);tile.classList.toggle("ok",a)}
+$("#achats").innerHTML=Array.from({length:NB_ACHATS},(_,i)=>`<div class="achat"><select data-afr="${i}" aria-label="Fournisseur achat ${i+1}"></select><input data-alib="${i}" placeholder="Détail (facultatif)" aria-label="Détail achat ${i+1}"><div class="eurin"><input data-amt="${i}" inputmode="decimal" aria-label="Montant achat ${i+1}" placeholder="0"></div></div>`).join("");
+function fournOptions(cur){const l=fourns();const all=cur&&!l.includes(cur)?[...l,cur]:l;return`<option value="">${l.length?"Fournisseur…":"Fournisseur (à créer dans Paramètres)"}</option>`+all.map(n=>`<option ${n===cur?"selected":""} value="${esc(n)}">${esc(n)}</option>`).join("")}
+function setTab(t){$$(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));$$(".pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===t));$(".dbody").scrollTop=0}
+$$(".tab").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+function openDrawer(id){
+  if(!S.canWrite&&!id){toast("Vous avez un accès en lecture seule.");return}
+  editId=id;const c=id?S.cmds.get(id):blank();if(!c)return;
+  $("#dTitle").textContent=id?(c.client||"Commande")+(c.ref?" · "+c.ref:""):"Nouvelle commande";
+  const coms=[...new Set([...users(),c.commercial].filter(Boolean))];
+  $("#f_com").innerHTML=coms.map(n=>`<option ${n===c.commercial?"selected":""}>${esc(n)}</option>`).join("");
+  $$("[data-f]").forEach(el=>{const k=el.dataset.f;const v=c[k];if(el.type==="checkbox")el.checked=!!v;else if(el.hasAttribute("data-num"))el.value=v==null?"":String(v).replace(".",",");else el.value=v==null?"":v});
+  $$("[data-prod]").forEach(el=>{el.value=(c.produits||{})[el.dataset.prod]||""});
+  $$("[data-arr]").forEach(el=>{el.checked=!!(c.arrives||{})[el.dataset.arr]});
+  $$(".prod").forEach(paintProd);
+  c.achats.forEach((a,i)=>{$(`[data-afr="${i}"]`).innerHTML=fournOptions(a.fr);$(`[data-alib="${i}"]`).value=a.lib||"";$(`[data-amt="${i}"]`).value=a.mt==null?"":String(a.mt).replace(".",",")});
+  $("#f_th").placeholder=String(S.cfg.tauxHoraire).replace(".",",");
+  $("#thHint").textContent=`Vide = taux général (${nfr(S.cfg.tauxHoraire,2)} €/h)`;
+  $("#dDel").style.visibility=id&&S.canWrite?"visible":"hidden";
+  $("#dSave").disabled=!S.canWrite;
+  $("#meta").textContent=id&&c.updatedAt?`Modifiée le ${new Date(c.updatedAt).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"})}${c.updatedBy?" par "+c.updatedBy:""}`:"";
+  const hx=id&&S.H.get(id);const fhr=$("#f_hr");fhr.disabled=!!hx;
+  $("#hrHint").textContent=hx?"Calculées depuis le fichier des heures":"";
+  renderHDetail(id);
+  setTab("cmd");updateResult();
+  $("#ov").classList.add("open");$("#drawer").classList.add("open");
+  setTimeout(()=>{if(!id)$("#f_cli").focus()},230);
+}
+function closeDrawer(){$("#ov").classList.remove("open");$("#drawer").classList.remove("open");editId=null}
+$("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#ov").onclick=closeDrawer;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#hmodal").classList.contains("open"))closeHModal();else if($("#settings").classList.contains("open"))closeSettings();else if($("#drawer").classList.contains("open"))closeDrawer()}});
+function readForm(){
+  const base=editId?{...S.raw.get(editId)}:blank();
+  $$("[data-f]").forEach(el=>{const k=el.dataset.f;if(el.disabled)return;if(el.type==="checkbox")base[k]=el.checked;else if(el.hasAttribute("data-num"))base[k]=num(el.value);else base[k]=el.value.trim()});
+  const p={};$$("[data-prod]").forEach(el=>{const v=el.value.trim();if(v)p[el.dataset.prod]=v});base.produits=p;
+  const ar={};$$("[data-arr]").forEach(el=>{if(el.checked)ar[el.dataset.arr]=true});base.arrives=ar;
+  base.achats=Array.from({length:NB_ACHATS},(_,i)=>({fr:$(`[data-afr="${i}"]`).value,lib:$(`[data-alib="${i}"]`).value.trim(),mt:num($(`[data-amt="${i}"]`).value)}));
+  return base;
+}
+function updateResult(){
+  const c=readForm();if(editId&&S.H.has(editId))c.heuresRealisees=Math.round(S.H.get(editId).total*100)/100;const f=fin(c);const k=f.coef;
+  $("#result").innerHTML=`<div class="big"><span class="coef ${coefClass(k)}">${coefFmt(k)}</span><div class="lbl"><strong>${f.isReel?"Marge de fin de chantier":k!=null?"Marge prévisionnelle":"Marge non calculable"}</strong>${f.isReel?"Calculée sur les heures réalisées":k!=null?"Sur les heures prévues, en attendant les heures réalisées":"Renseignez le prix de vente et les achats ou heures"}${k!=null?` · objectif ${coefFmt(S.cfg.coefCible)}`:""}</div></div>
+  <table><tbody>
+   <tr><td>Achats</td><td class="r num">${eur(f.hasAch?f.achats:null)}</td><td class="r num"></td></tr>
+   <tr><td></td><td class="r sub">Prévu</td><td class="r sub">Réalisé</td></tr>
+   <tr><td>Main d'œuvre (${nfr(f.taux,2)} €/h)</td><td class="r num">${c.heuresPrevues!=null?eur(c.heuresPrevues*f.taux):"–"}</td><td class="r num">${c.heuresRealisees!=null?eur(c.heuresRealisees*f.taux):"–"}</td></tr>
+   <tr><td><b>Prix de revient</b></td><td class="r num"><b>${eur(f.prPrev)}</b></td><td class="r num"><b>${f.isReel||c.heuresRealisees!=null?eur(f.prReel):"–"}</b></td></tr>
+   <tr><td>Marge brute</td><td class="r num">${f.pv&&f.prPrev!=null?eur(f.pv-f.prPrev):"–"}</td><td class="r num">${f.pv&&c.heuresRealisees!=null?eur(f.pv-f.prReel):"–"}</td></tr>
+   <tr><td>Coefficient</td><td class="r num"><span class="${coefClass(f.coefPrev)}">${coefFmt(f.coefPrev)}</span></td><td class="r num"><span class="${coefClass(f.coefReel)}">${coefFmt(f.coefReel)}</span></td></tr>
+   ${c.heuresPrevues!=null&&c.heuresRealisees!=null?`<tr><td>Écart d'heures</td><td></td><td class="r num ${c.heuresRealisees>c.heuresPrevues?"c-bad":"c-good"}">${c.heuresRealisees>c.heuresPrevues?"+":""}${nfr(c.heuresRealisees-c.heuresPrevues)} h</td></tr>`:""}
+  </tbody></table>
+  <div class="formula">Marge = prix de vente ÷ prix de revient · Prix de revient = achats + heures × taux horaire</div>`;
+}
+$("#form").addEventListener("input",e=>{if(e.target.closest(".prod"))paintProd(e.target.closest(".prod"));updateResult()});
+$("#form").addEventListener("change",e=>{
+  const el=e.target,part=$('[data-f="arrivagePartiel"]'),comp=$('[data-f="arrivage"]');
+  if(el.dataset.arr!==undefined){const any=$$("[data-arr]").some(x=>x.checked);
+    if(any&&!comp.checked)part.checked=true;if(!any)part.checked=false}
+  if(el===comp&&comp.checked)part.checked=false;
+  if(el===part&&part.checked)comp.checked=false;
+});
+$("#dSave").onclick=async()=>{
+  const c=readForm();
+  if(!c.client){setTab("cmd");$("#f_cli").focus();toast("Indiquez le nom du client.");return}
+  const id=editId||newId();delete c.id;
+  const btn=$("#dSave");btn.disabled=true;
+  try{await saveCmd(id,c);toast("Commande enregistrée");closeDrawer()}
+  catch(e){toast(e&&e.code==="invalid_argument"?"Enregistrement refusé : vous êtes en lecture seule.":"Enregistrement impossible, réessayez.")}
+  finally{btn.disabled=false}
+};
+$("#dDel").onclick=async()=>{
+  if(!editId)return;const c=S.cmds.get(editId);
+  if(!confirm(`Supprimer la commande ${c.ref||""} de ${c.client} ?`))return;
+  try{await delCmd(editId);toast("Commande supprimée");closeDrawer()}catch(e){toast("Suppression impossible.")}
+};
+
+/* ---------- Paramètres ---------- */
+function openSettings(){renderSettings();$("#s_th").value=String(S.cfg.tauxHoraire).replace(".",",");$("#s_cc").value=String(S.cfg.coefCible).replace(".",",");$("#ov2").classList.add("open");$("#settings").classList.add("open")}
+function closeSettings(){$("#ov2").classList.remove("open");$("#settings").classList.remove("open")}
+$("#btnSettings").onclick=openSettings;$("#sClose").onclick=closeSettings;$("#ov2").onclick=closeSettings;
+function renderSettings(){
+  $("#usersList").innerHTML=users().map((n,i)=>`<li><span>${esc(n)}</span>${n===curUser?`<span class="sub">actif</span>`:""}<button class="btn ghost" data-deluser="${i}" aria-label="Retirer ${esc(n)}" ${users().length<2?"disabled":""}>Retirer</button></li>`).join("");
+  $("#fournList").innerHTML=fourns().length?fourns().map(n=>`<li><span>${esc(n)}</span><button class="btn ghost" data-delfourn="${esc(n)}" aria-label="Retirer ${esc(n)}">Retirer</button></li>`).join(""):`<li style="font-weight:400;color:var(--muted)">Aucun fournisseur pour l'instant.</li>`;
+  const imps=S.hcfg.imports||{};const ys=Object.keys(imps).sort().reverse();
+  $("#hTxt").innerHTML=(S.hDenied?`<p class="c-bad">Les règles Firebase ne permettent pas encore d'enregistrer les heures. Mettez-les à jour (Firestore Database &gt; Règles) avec le contenu du fichier firestore.rules fourni, puis rechargez.</p>`:"")+
+    (ys.length?`<ul class="users" style="margin-bottom:10px">${ys.map(y=>{const i=imps[y];return`<li style="font-weight:400;display:block;padding:8px 12px"><b>${esc(y)}</b> · ${esc(i.fichier||"")} <span class="sub">importé le ${i.date?new Date(i.date).toLocaleDateString("fr-FR"):"?"} · ${nfr(i.heures,1)} h sur ${i.commandes} commande${i.commandes>1?"s":""}</span></li>`}).join("")}</ul>`:"")+
+    `<p>Chargez le fichier « heures chantier » de l'année (.ods ou .xlsx). Un nouvel import remplace les heures de la même année, sans les cumuler ; les autres années sont conservées.</p>`;
+  $("#impTxt").textContent=`${S.cmds.size} commande${S.cmds.size>1?"s":""} enregistrée${S.cmds.size>1?"s":""}. L'import accepte le fichier commandes_import.json ou un export CSV de cette application ; les commandes déjà présentes (même n° de commande) ne sont pas dupliquées.`;
+}
+$("#sSaveCalc").onclick=async()=>{
+  const th=num($("#s_th").value),cc=num($("#s_cc").value);
+  if(th==null||th<=0){toast("Taux horaire invalide.");return}
+  S.cfg.tauxHoraire=th;if(cc!=null&&cc>0)S.cfg.coefCible=cc;
+  try{await saveCfg();toast("Paramètres enregistrés");render()}catch(e){toast("Enregistrement impossible.")}
+};
+$("#addUser").onclick=async()=>{
+  const n=$("#newUser").value.trim().toUpperCase();if(!n)return;
+  if(users().includes(n)){toast("Cet utilisateur existe déjà.");return}
+  S.cfg.utilisateurs=[...users(),n];$("#newUser").value="";
+  try{await saveCfg();renderSettings();render();toast(n+" ajouté")}catch(e){toast("Ajout impossible.")}
+};
+$("#newUser").addEventListener("keydown",e=>{if(e.key==="Enter")$("#addUser").click()});
+$("#addFourn").onclick=async()=>{
+  const n=$("#newFourn").value.trim();if(!n)return;
+  if((S.cfg.fournisseurs||[]).some(x=>x.toLowerCase()===n.toLowerCase())){toast("Ce fournisseur existe déjà.");return}
+  S.cfg.fournisseurs=[...(S.cfg.fournisseurs||[]),n];$("#newFourn").value="";
+  try{await saveCfg();renderSettings();toast(n+" ajouté")}catch(e){toast("Ajout impossible.")}
+};
+$("#newFourn").addEventListener("keydown",e=>{if(e.key==="Enter")$("#addFourn").click()});
+$("#fournList").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-delfourn]");if(!b)return;const n=b.dataset.delfourn;
+  if(!confirm(`Retirer ${n} de la liste ? Les achats déjà saisis gardent ce fournisseur.`))return;
+  S.cfg.fournisseurs=(S.cfg.fournisseurs||[]).filter(x=>x!==n);
+  try{await saveCfg();renderSettings()}catch(e){toast("Modification impossible.")}
+});
+$("#usersList").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-deluser]");if(!b)return;const n=users()[+b.dataset.deluser];
+  if(!confirm(`Retirer ${n} de la liste ? Ses commandes sont conservées.`))return;
+  S.cfg.utilisateurs=users().filter(x=>x!==n);
+  try{await saveCfg();renderSettings();render()}catch(e){toast("Modification impossible.")}
+});
+
+/* ---------- Heures chantier ---------- */
+const nrm=s=>String(s==null?"":s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g," ").trim();
+const nkey=s=>nrm(s).replace(/ /g,"_")||"_";
+const refKey=s=>String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+const p2=n=>String(n).padStart(2,"0");
+const fmtDL=d=>{if(!d)return"";const x=new Date(d+"T12:00:00");return x.toLocaleDateString("fr-FR",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})};
+const fmtDS=d=>d?`${d.slice(8,10)}/${d.slice(5,7)}`:"";
+let XLSXp=null;
+function loadXLSX(){if(window.XLSX)return Promise.resolve();if(!XLSXp)XLSXp=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=res;s.onerror=()=>{XLSXp=null;rej(new Error("lecteur de fichiers indisponible, vérifiez la connexion"))};document.head.appendChild(s)});return XLSXp}
+function cellDate(v){
+  if(v==null||v==="")return null;
+  if(v instanceof Date){if(isNaN(v))return null;const d=new Date(v.getTime()+12*3600e3);return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`}
+  if(typeof v==="number"){const q=window.XLSX.SSF.parse_date_code(v);return q?`${q.y}-${p2(q.m)}-${p2(q.d)}`:null}
+  const s=String(v).trim();let m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);if(m){const y=m[3].length===2?"20"+m[3]:m[3];return`${y}-${p2(m[2])}-${p2(m[1])}`}
+  m=s.match(/^\d{4}-\d{2}-\d{2}/);return m?m[0]:null;
+}
+function cellHours(v){
+  if(v==null||v==="")return null;if(typeof v==="number")return v;
+  if(v instanceof Date)return v.getHours()+v.getMinutes()/60;
+  const s=String(v).trim().toLowerCase().replace(/\s/g,"");const m=s.match(/^(\d+)[h:](\d{1,2})?$/);if(m)return +m[1]+(m[2]?+m[2]/60:0);
+  const n=parseFloat(s.replace(",","."));return isFinite(n)?n:null;
+}
+function parseHeures(buf,fname){
+  const wb=window.XLSX.read(buf,{type:"array",cellDates:true});let best=null;
+  wb.SheetNames.forEach(n=>{const rows=window.XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null,blankrows:false});if(!best||rows.length>best.rows.length)best={name:n,rows}});
+  if(!best||!best.rows.length)throw new Error("le fichier est vide");
+  const rows=best.rows;const hi=rows.slice(0,15).findIndex(r=>r&&r.some(c=>/CHANTIER/.test(nrm(c)))&&r.some(c=>/NOM/.test(nrm(c))));
+  const H=hi>=0?rows[hi].map(nrm):[];const find=(re,def)=>{const i=H.findIndex(c=>re.test(c));return i>=0?i:def};
+  const col={d:find(/^DATE$/,1),s:find(/NOM/,2),h:find(/^H$|^HEURES?$|^NB H/,3),ch:find(/^CHANTIER$/,4),cmd:find(/COMMANDE/,5),tr:find(/TRAVAUX/,7)};
+  const out=[];const spell={};
+  rows.slice(hi+1).forEach(r=>{if(!r)return;const s=String(r[col.s]??"").trim(),ch=String(r[col.ch]??"").trim(),h=cellHours(r[col.h]),d=cellDate(r[col.d]);
+    if(!s||!ch||h==null||!(h>0))return;
+    const k=s.toLowerCase().replace(/\s+/g," ");(spell[k]=spell[k]||{})[s]=((spell[k]||{})[s]||0)+1;
+    out.push({d,sk:k,h:Math.round(h*100)/100,ch,cmd:String(r[col.cmd]??"").trim(),tr:String(r[col.tr]??"").trim()})});
+  const nameOf={};Object.entries(spell).forEach(([k,v])=>{nameOf[k]=Object.entries(v).sort((a,b)=>b[1]-a[1])[0][0]});
+  out.forEach(l=>{l.s=nameOf[l.sk];delete l.sk});
+  const ym=String(fname).match(/20\d{2}/);const cnt={};out.forEach(l=>{if(l.d){const y=l.d.slice(0,4);cnt[y]=(cnt[y]||0)+1}});
+  const year=ym?ym[0]:(Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0]||[String(TODAY.getFullYear())])[0];
+  return{sheet:best.name,lignes:out,year,yearsInFile:cnt};
+}
+function analyseHeures(P){
+  const byRef=new Map(),byName=new Map();
+  S.raw.forEach((c,id)=>{if(c.ref)byRef.set(refKey(c.ref),id);const k=nrm(c.client);if(k){if(!byName.has(k))byName.set(k,[]);byName.get(k).push(id)}});
+  const map=S.hcfg.map||{};const G=new Map();
+  P.lignes.forEach(l=>{
+    const refs=(l.cmd.toUpperCase().match(/[A-Z]{2}\s*\d{5,}/g)||[]).map(refKey);const t=refs.map(r=>byRef.get(r)).find(Boolean);
+    if(t){l.target=t;l.info=l.tr}else{l.target=null;l.info=[l.cmd,l.tr].filter(Boolean).join(" · ")}
+    const key=nkey(l.ch);let g=G.get(key);if(!g){g={key,name:l.ch,lignes:[],total:0,first:null,last:null,byRef:0};G.set(key,g)}
+    g.lignes.push(l);g.total+=l.h;if(t)g.byRef++;if(l.d){if(!g.first||l.d<g.first)g.first=l.d;if(!g.last||l.d>g.last)g.last=l.d}});
+  G.forEach(g=>{
+    const n=nrm(g.name);g.cands=byName.get(n)||byName.get(n.replace(/ \d{2}$/,""))||[];
+    const saved=map[g.key];
+    if(saved&&(saved==="-"||S.raw.has(saved))){g.choice=saved==="-"?"":saved;g.status="saved"}
+    else if(g.cands.length===1){g.choice=g.cands[0];g.status="auto"}
+    else if(g.cands.length>1){const c=g.cands.map(id=>[id,S.raw.get(id).date||""]).sort((a,b)=>a[1].localeCompare(b[1]));const before=c.filter(x=>!g.first||x[1]<=g.first);g.choice=(before.length?before[before.length-1]:c[0])[0];g.status="ambigu"}
+    else{g.choice="";g.status=g.byRef===g.lignes.length?"ref":"aucun"}
+    g.initial=g.choice;});
+  return[...G.values()];
+}
+let HS=null;
+const cmdLabel=id=>{const c=S.raw.get(id);return c?`${c.client} · ${c.ref||"sans n°"} · ${fmtDate(c.date)}${c.lieu?" · "+c.lieu:""}${c.descriptif?" · "+(c.descriptif.length>32?c.descriptif.slice(0,30)+"…":c.descriptif):""}`:"?"};
+let allOpts=null;
+function selectHtml(g){
+  if(!allOpts)allOpts=[...S.raw.entries()].sort((a,b)=>(a[1].client||"").localeCompare(b[1].client||"","fr")||(b[1].date||"").localeCompare(a[1].date||"")).map(([id])=>`<option value="${esc(id)}">${esc(cmdLabel(id))}</option>`).join("");
+  return`<select data-g="${esc(g.key)}" aria-label="Commande pour ${esc(g.name)}"><option value="">— Ne pas rattacher —</option>${g.cands.length?`<optgroup label="Commandes de ce client">${g.cands.map(id=>`<option value="${esc(id)}">${esc(cmdLabel(id))}</option>`).join("")}</optgroup>`:""}<optgroup label="Toutes les commandes">${allOpts}</optgroup></select>`;
+}
+function hrowHtml(g,withSelect){
+  const meta=`${g.lignes.length} ligne${g.lignes.length>1?"s":""}${g.first?` · ${fmtDS(g.first)} → ${fmtDS(g.last)}`:""}${g.byRef?` · ${g.byRef} par n° de commande`:""}`;
+  const right=withSelect?selectHtml(g):`<div class="cur"><span>${g.choice?esc(cmdLabel(g.choice)):'<span class="sub">Non rattaché</span>'}</span><button type="button" data-edit="${esc(g.key)}">Modifier</button></div>`;
+  return`<div class="hrow ${g.status==="ambigu"?"warn":""}" data-row="${esc(g.key)}"><div class="nm">${esc(g.name)}<small>${meta}</small></div><div class="r num"><b>${nfr(g.total,2)} h</b></div>${right}</div>`;
+}
+function renderHModal(){
+  const b=$("#hbody");if(!HS){return}
+  if(HS.step==="load"){b.innerHTML=`<div class="loading">${esc(HS.msg||"Lecture du fichier…")}</div>`;return}
+  if(HS.step==="error"){b.innerHTML=`<div class="empty"><h2>Fichier illisible</h2><p>${esc(HS.msg)}</p><button class="btn" id="hRetry">Choisir un autre fichier</button></div>`;$("#hRetry").onclick=()=>$("#hFile").click();return}
+  if(HS.step==="done"){b.innerHTML=`<div class="empty"><h2>Heures ${esc(HS.year)} enregistrées</h2><p>${nfr(HS.res.heures,1)} h réparties sur ${HS.res.commandes} commande${HS.res.commandes>1?"s":""}. Les heures réalisées et les marges sont à jour. Les heures des autres années n'ont pas été modifiées.</p><button class="btn primary" id="hOk">Fermer</button></div>`;$("#hOk").onclick=closeHModal;return}
+  const G=HS.groups;const A=G.filter(g=>g.status==="ambigu"),B=G.filter(g=>g.status==="auto"||g.status==="saved"||(g.status==="ref")),C=G.filter(g=>g.status==="aucun");
+  const tot=HS.P.lignes.reduce((s,l)=>s+l.h,0);const other=Object.keys(HS.P.yearsInFile).filter(y=>y!==HS.year);
+  const exist=(S.hcfg.imports||{})[HS.year];
+  b.innerHTML=`
+  <div class="hsum"><span>Fichier <b>${esc(HS.fname)}</b></span><span><b>${HS.P.lignes.length}</b> lignes · <b>${nfr(tot,0)}</b> h · <b>${G.length}</b> chantiers</span>
+    <label>Année <select id="hYear" class="sel">${[+HS.P.year-1,+HS.P.year,+HS.P.year+1].map(y=>`<option ${String(y)===HS.year?"selected":""}>${y}</option>`).join("")}</select></label></div>
+  ${exist?`<p class="note" style="margin:-6px 0 14px">Un import ${esc(HS.year)} existe déjà (${esc(exist.fichier||"")}). Ses heures seront <b>remplacées</b> par celles de ce fichier, sans cumul.</p>`:""}
+  ${other.length?`<p class="note" style="margin:-6px 0 14px">Le fichier contient aussi des dates en ${other.map(esc).join(", ")} : elles seront comptées avec l'import ${esc(HS.year)}.</p>`:""}
+  ${A.length?`<section class="hsec"><div class="hh">À vérifier <span class="cnt">${A.length} chantier${A.length>1?"s":""} dont le client a plusieurs commandes : choisissez la bonne</span></div>${A.map(g=>hrowHtml(g,true)).join("")}</section>`:""}
+  <details class="hsec" ${A.length?"":"open"}><summary>Rattachés <span class="cnt">${B.length} chantier${B.length>1?"s":""} · ${nfr(B.reduce((s,g)=>s+g.total,0),0)} h</span></summary>${B.map(g=>hrowHtml(g,false)).join("")}</details>
+  <details class="hsec"><summary>Sans commande dans le carnet <span class="cnt">${C.length} chantier${C.length>1?"s":""} · ${nfr(C.reduce((s,g)=>s+g.total,0),0)} h · ignorés (atelier, absences, chantiers pro…)</span></summary>${C.map(g=>hrowHtml(g,false)).join("")}</details>
+  <p class="note">Astuce : pour répartir un même client entre deux commandes, indiquez le n° de commande (ex. PL2500565) dans la colonne F du fichier ; il est prioritaire sur le nom du chantier.</p>
+  <div class="hfoot"><span class="sub" id="hCount"></span><button class="btn" id="hCancel">Annuler</button><button class="btn primary" id="hSave">Enregistrer les heures ${esc(HS.year)}</button></div>`;
+  $$("#hbody select[data-g]").forEach(s=>{const g=HS.byKey.get(s.dataset.g);s.value=g.choice||""});
+  updHCount();
+  $("#hYear").onchange=e=>{HS.year=e.target.value;renderHModal()};
+  $("#hCancel").onclick=closeHModal;$("#hSave").onclick=saveHeures;
+}
+function updHCount(){if(!HS||!HS.groups)return;const ids=new Set();let h=0;HS.groups.forEach(g=>g.lignes.forEach(l=>{const t=l.target||g.choice;if(t){ids.add(t);h+=l.h}}));const el=$("#hCount");if(el)el.textContent=`${nfr(h,1)} h seront réparties sur ${ids.size} commande${ids.size>1?"s":""}`}
+$("#hbody").addEventListener("change",e=>{const s=e.target.closest("select[data-g]");if(!s)return;HS.byKey.get(s.dataset.g).choice=s.value;updHCount()});
+$("#hbody").addEventListener("click",e=>{const b=e.target.closest("[data-edit]");if(!b)return;const g=HS.byKey.get(b.dataset.edit);const row=b.closest(".hrow");row.lastElementChild.outerHTML=selectHtml(g);const s=row.querySelector("select");s.value=g.choice||"";s.focus()});
+function openHModal(){$("#ov3").classList.add("open");$("#hmodal").classList.add("open")}
+function closeHModal(){if(HS&&HS.saving)return;$("#ov3").classList.remove("open");$("#hmodal").classList.remove("open");HS=null}
+$("#hClose").onclick=closeHModal;$("#ov3").onclick=closeHModal;
+$("#btnHeures").onclick=()=>{if(S.hDenied){toast("Mettez d'abord à jour les règles Firebase.");return}$("#hFile").click()};
+$("#hFile").onchange=async e=>{
+  const file=e.target.files[0];e.target.value="";if(!file)return;
+  closeSettings();allOpts=null;HS={step:"load",fname:file.name};openHModal();renderHModal();
+  try{await loadXLSX();const buf=await file.arrayBuffer();const P=parseHeures(buf,file.name);
+    if(!P.lignes.length)throw new Error("aucune ligne d'heures trouvée (colonnes date, nom, heures, chantier)");
+    const groups=analyseHeures(P).sort((a,b)=>a.name.localeCompare(b.name,"fr"));
+    HS={step:"review",fname:file.name,P,year:P.year,groups,byKey:new Map(groups.map(g=>[g.key,g]))};renderHModal();
+  }catch(x){HS={step:"error",msg:"Impossible de lire ce fichier : "+(x.message||x)};renderHModal()}
+};
+async function saveHeures(){
+  const Y=HS.year;const now=new Date().toISOString();const byCmd=new Map();
+  HS.groups.forEach(g=>g.lignes.forEach(l=>{const t=l.target||g.choice;if(!t)return;if(!byCmd.has(t))byCmd.set(t,[]);byCmd.get(t).push({d:l.d||"",s:l.s,h:l.h,t:l.info||""})}));
+  const newMap={};HS.groups.forEach(g=>{if(g.status==="ambigu"||g.status==="saved"||g.choice!==g.initial)newMap[g.key]=g.choice||"-"});
+  const writes=[];
+  byCmd.forEach((lignes,cid)=>{lignes.sort((a,b)=>(a.d||"").localeCompare(b.d||"")||a.s.localeCompare(b.s));const total=Math.round(lignes.reduce((s,l)=>s+l.h,0)*100)/100;
+    writes.push(["set",`${Y}_${cid}`,{year:Y,commandeId:cid,total,lignes,fichier:HS.fname,importedAt:now}])});
+  S.Hdocs.forEach((x,id)=>{if(String(x.year)===String(Y)&&!byCmd.has(x.commandeId))writes.push(["del",id])});
+  const heures=Math.round([...byCmd.values()].flat().reduce((s,l)=>s+l.h,0)*100)/100;
+  HS.saving=true;const btn=$("#hSave");btn.disabled=true;btn.textContent="Enregistrement…";
+  try{
+    for(let i=0;i<writes.length;i+=400){const b=writeBatch(FB.db);writes.slice(i,i+400).forEach(([op,id,data])=>{const r=doc(FB.db,"heures",id);op==="set"?b.set(r,data):b.delete(r)});const p=b.commit();if(navigator.onLine)await p}
+    const p=setDoc(doc(FB.db,"config","heures"),{map:newMap,imports:{[Y]:{fichier:HS.fname,date:now,lignes:HS.P.lignes.length,heures,commandes:byCmd.size}}},{merge:true});if(navigator.onLine)await p;
+    HS.saving=false;HS.step="done";HS.res={heures,commandes:byCmd.size};renderHModal();
+  }catch(e){HS.saving=false;btn.disabled=false;btn.textContent=`Enregistrer les heures ${Y}`;
+    toast(e&&e.code==="permission-denied"?"Refusé par Firebase : mettez à jour les règles (firestore.rules).":"Enregistrement impossible, réessayez.")}
+}
+function renderHDetail(id){
+  const box=$("#hdetail");const x=id&&S.H.get(id);
+  if(!x){box.innerHTML=id?`<p class="hnote">Les heures réalisées se rempliront automatiquement à l'import du fichier des heures chantier (Paramètres).</p>`:"";return}
+  const ys=Object.keys(x.years).sort().reverse();
+  box.innerHTML=`<div class="sect" style="margin:0 0 8px">Détail des heures réalisées</div>`+ys.map(y=>{const Yd=x.years[y];const by={};
+    Yd.lignes.forEach(l=>{(by[l.s]=by[l.s]||{h:0,l:[],d:new Set()}).h+=l.h;by[l.s].l.push(l);if(l.d)by[l.s].d.add(l.d)});
+    const sal=Object.entries(by).sort((a,b)=>b[1].h-a[1].h);
+    return`<h4><span>${esc(y)}</span><span>${nfr(Yd.total,2)} h</span></h4>`+sal.map(([n,o])=>{const ds=[...o.d].sort();
+      return`<details class="hsal"><summary><span class="nm">${esc(n)}</span><span class="sub">${ds.length} jour${ds.length>1?"s":""}${ds.length?` · ${fmtDS(ds[0])}${ds.length>1?" → "+fmtDS(ds[ds.length-1]):""}`:""}</span><b>${nfr(o.h,2)} h</b></summary>
+      <table><tbody>${o.l.map(l=>`<tr><td class="num">${esc(fmtDL(l.d))}</td><td class="sub">${esc(l.t)}</td><td class="r num">${nfr(l.h,2)} h</td></tr>`).join("")}</tbody></table></details>`}).join("")+
+      `<p class="hnote">Fichier ${esc(Yd.fichier)}${Yd.importedAt?`, importé le ${new Date(Yd.importedAt).toLocaleDateString("fr-FR")}`:""}</p>`}).join("");
+}
+
+/* ---------- Import / export ---------- */
+function fromSeed(o){return{...blank(),ref:o.r||"",date:o.d||"",client:o.c||"",lieu:o.l||"",descriptif:o.ds||"",commercial:o.com||"SAMUEL",commentaires:o.cm||"",arrivage:!!o.a,fini:!!o.f,sav:!!o.sav,solde:!!o.so,semLivraison:o.sl||"",semPose:o.sp||"",tempsPose:o.tp||"",produits:o.p||{},heuresPrevues:o.h==null?null:o.h}}
+function parseCSV(text){
+  text=text.replace(/^\ufeff/,"");const first=text.split(/\r?\n/)[0]||"";const sep=(first.split(";").length>=first.split(",").length)?";":",";
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;else if(ch===sep){row.push(f);f=""}else if(ch==="\n"){row.push(f.replace(/\r$/,""));rows.push(row);row=[];f=""}else f+=ch}
+  if(f||row.length){row.push(f.replace(/\r$/,""));rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+function fromCSV(rows){
+  const h=rows[0].map(x=>x.trim().toLowerCase());const col=n=>h.indexOf(n.toLowerCase());
+  const g=(r,n)=>{const i=col(n);return i<0?"":(r[i]||"").trim()};const yes=v=>!!v&&!/^(0|non|no|false)$/i.test(v);
+  const dt=v=>{const m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);if(m){const y=m[3].length===2?"20"+m[3]:m[3];return`${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`}return v.slice(0,10)};
+  if(col("client")<0)throw new Error("Colonne « Client » introuvable dans le CSV.");
+  return rows.slice(1).map(r=>{const p={};PRODUITS.forEach(([k])=>{const v=g(r,k);if(v)p[k]=v});
+    return{...blank(),ref:g(r,"N° commande"),date:dt(g(r,"Date")),commercial:g(r,"Commercial")||curUser||"",client:g(r,"Client"),lieu:g(r,"Lieu"),descriptif:g(r,"Descriptif"),arrivage:yes(g(r,"Arrivage")),semLivraison:g(r,"Semaine livraison"),tempsPose:g(r,"Temps de pose"),heuresPrevues:num(g(r,"Heures prévues")),heuresRealisees:num(g(r,"Heures réalisées")),produits:p,arrivagePartiel:yes(g(r,"Arrivage partiel")),arrives:Object.fromEntries(g(r,"Fournitures arrivées").split(/[,\s]+/).map(x=>x.trim()).filter(x=>x).map(x=>[PRODUITS.map(p=>p[0]).find(k=>k.replace(/\s/g,"").toUpperCase()===x.toUpperCase())||x,true]).filter(([k])=>PRODUITS.some(p=>p[0]===k))),commentaires:g(r,"Commentaires"),semPose:g(r,"Semaine de pose"),sav:yes(g(r,"SAV")),fini:yes(g(r,"Fini")),solde:yes(g(r,"Soldé")),prixVente:num(g(r,"Prix de vente HT")),
+      achats:Array.from({length:NB_ACHATS},(_,j)=>{const i=j+1;return{fr:g(r,"Fournisseur "+i),lib:g(r,"Achat "+i),mt:num(g(r,"Montant "+i))}}),tauxHoraire:num(g(r,"Taux horaire"))}}).filter(c=>c.client);
+}
+let importing=false;
+async function importList(list){
+  const refs=new Set([...S.cmds.values()].map(c=>(c.ref||"").toUpperCase()).filter(Boolean));
+  const todo=[];list.forEach(c=>{const R=(c.ref||"").toUpperCase();if(R&&refs.has(R))return;if(R)refs.add(R);
+    const id=R?"imp-"+R.replace(/[^A-Z0-9_-]/g,""):newId();todo.push([id,c])});
+  if(!todo.length){toast("Toutes ces commandes sont déjà enregistrées.");return}
+  importing=true;const prog=$("#prog");prog.style.display="block";
+  $$('[data-act="import"]').forEach(b=>{b.disabled=true;b.textContent="Import en cours…"});
+  const coms=[...new Set(todo.map(([,c])=>c.commercial).filter(Boolean))].filter(n=>!users().includes(n));
+  const frs=[...new Set(todo.flatMap(([,c])=>(c.achats||[]).map(a=>a.fr)).filter(Boolean))].filter(n=>!(S.cfg.fournisseurs||[]).includes(n));
+  if(coms.length||frs.length){if(coms.length)S.cfg.utilisateurs=[...users(),...coms];if(frs.length)S.cfg.fournisseurs=[...(S.cfg.fournisseurs||[]),...frs];try{await saveCfg()}catch(e){}}
+  let done=0,fail=0;const now=new Date().toISOString();
+  for(let i=0;i<todo.length;i+=400){const part=todo.slice(i,i+400);const b=writeBatch(FB.db);
+    part.forEach(([id,c])=>{b.set(doc(FB.db,"commandes",id),{...c,updatedAt:now,updatedBy:curUser||""})});
+    try{const p=b.commit();if(navigator.onLine)await p;done+=part.length}catch(e){fail+=part.length;if(e&&e.code==="permission-denied"){denied();break}}
+    prog.firstElementChild.style.width=((done+fail)/todo.length*100)+"%"}
+  importing=false;prog.style.display="none";prog.firstElementChild.style.width="0";
+  F.statut="encours";render();renderSettings();
+  toast(fail?`${done} commandes importées, ${fail} en échec.`:`${done} commande${done>1?"s":""} importée${done>1?"s":""}`);
+}
+$("#btnImport").onclick=()=>$("#fileIn").click();
+$("#fileIn").onchange=async e=>{
+  const file=e.target.files[0];e.target.value="";if(!file||importing)return;
+  try{const txt=await file.text();let list;
+    if(/\.json$/i.test(file.name)||/^\s*[\[{]/.test(txt)){const j=JSON.parse(txt);const arr=Array.isArray(j)?j:(j.commandes||[]);list=arr.map(o=>o.r!==undefined?fromSeed(o):norm(o))}
+    else list=fromCSV(parseCSV(txt));
+    if(!list.length){toast("Aucune commande trouvée dans ce fichier.");return}
+    if(!confirm(`Importer ${list.length} commande${list.length>1?"s":""} depuis « ${file.name} » ?`))return;
+    await importList(list);
+  }catch(x){toast("Fichier illisible : "+(x.message||"format non reconnu"))}
+};
+$("#btnExport").onclick=()=>{
+  const cols=["N° commande","Date","Commercial","Client","Lieu","Descriptif","Arrivage","Arrivage partiel","Semaine livraison","Temps de pose","Heures prévues","Heures réalisées",...PRODUITS.map(p=>p[0]),"Fournitures arrivées","Commentaires","Semaine de pose","SAV","Fini","Soldé","Prix de vente HT",...Array.from({length:NB_ACHATS},(_,j)=>["Fournisseur "+(j+1),"Achat "+(j+1),"Montant "+(j+1)]).flat(),"Taux horaire","Prix de revient","Marge"];
+  const q=v=>{v=v==null?"":String(v);return/[";\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};
+  const dn=v=>v==null?"":String(Math.round(v*100)/100).replace(".",",");
+  const rows=[...S.cmds.values()].sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(c=>{const f=fin(c);return[c.ref,c.date,c.commercial,c.client,c.lieu,c.descriptif,c.arrivage?"X":"",c.arrivagePartiel?"X":"",c.semLivraison,c.tempsPose,dn(c.heuresPrevues),dn(c.heuresRealisees),...PRODUITS.map(p=>(c.produits||{})[p[0]]||""),Object.keys(c.arrives||{}).filter(k=>c.arrives[k]).join(", "),c.commentaires,c.semPose,c.sav?"X":"",c.fini?"X":"",c.solde?"X":"",dn(c.prixVente),...c.achats.map(a=>[a.fr,a.lib,dn(a.mt)]).flat(),c.tauxHoraire!=null?dn(c.tauxHoraire):"",dn(f.isReel?f.prReel:f.prPrev),dn(f.coef)].map(q).join(";")});
+  const csv="\ufeff"+[cols.map(q).join(";"),...rows].join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  const a=document.createElement("a");a.href=url;a.download=`commandes_${TODAY.toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+};
+
+boot();
+})();
+</script>
+</body>
+</html>
